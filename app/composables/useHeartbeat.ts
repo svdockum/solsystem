@@ -18,12 +18,14 @@ export function useHeartbeat(sunId: Ref<string>, sunSlug: Ref<string>) {
     await supabase.rpc('heartbeat', { p_token: token })
   }
 
+  const deleteAttendee = async (token: string) => {
+    await supabase.from('attendees').delete().eq('session_token', token)
+    sessionStorage.removeItem(`solsystem_token_${sunId.value}`)
+  }
+
   const handleIdle = async () => {
     const token = getToken()
-    if (token) {
-      await supabase.rpc('leave_sun', { p_token: token })
-      sessionStorage.removeItem(`solsystem_token_${sunId.value}`)
-    }
+    if (token) await deleteAttendee(token)
     await navigateTo(`/join/${sunSlug.value}?idle=1`)
   }
 
@@ -50,10 +52,7 @@ export function useHeartbeat(sunId: Ref<string>, sunSlug: Ref<string>) {
   const leave = async () => {
     stop()
     const token = getToken()
-    if (token) {
-      await supabase.rpc('leave_sun', { p_token: token })
-      sessionStorage.removeItem(`solsystem_token_${sunId.value}`)
-    }
+    if (token) await deleteAttendee(token)
   }
 
   onMounted(start)
