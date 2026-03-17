@@ -223,14 +223,17 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
 
   watch(
     attendees,
-    (newList, oldList) => {
-      const newIds = new Set(newList.map(a => a.id))
-      const oldIds = new Set((oldList ?? []).map(a => a.id))
-      for (const attendee of newList) {
-        if (!oldIds.has(attendee.id)) addPlanet(attendee)
+    (list) => {
+      const currentIds = new Set(list.map(a => a.id))
+
+      // Add any attendee not yet in the planets Map
+      for (const attendee of list) {
+        if (!planets.has(attendee.id)) addPlanet(attendee)
       }
-      for (const old of oldList ?? []) {
-        if (!newIds.has(old.id)) removePlanet(old.id)
+
+      // Remove any planet whose attendee has left
+      for (const id of planets.keys()) {
+        if (!currentIds.has(id)) removePlanet(id)
       }
     },
     { deep: true, immediate: true },

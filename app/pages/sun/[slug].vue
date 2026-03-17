@@ -1,24 +1,5 @@
 <template>
   <div class="fixed inset-0 overflow-hidden">
-    <!-- No session token guard -->
-    <div
-      v-if="!hasToken && !loading"
-      class="absolute inset-0 z-20 flex items-center justify-center bg-black/80 backdrop-blur-sm"
-    >
-      <div class="glass-panel p-8 text-center max-w-sm">
-        <div class="text-4xl mb-4">☀️</div>
-        <h2 class="text-xl font-bold mb-2">{{ sun?.name ?? 'This Sun' }}</h2>
-        <p class="text-white/50 text-sm mb-6">Scan the QR code or use the link below to join the orbit.</p>
-        <NuxtLink
-          v-if="sun"
-          :to="`/join/${sun.slug}`"
-          class="btn-primary block text-center"
-        >
-          Join the orbit
-        </NuxtLink>
-      </div>
-    </div>
-
     <!-- Loading -->
     <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center">
       <div class="w-10 h-10 border-2 border-sun/30 border-t-sun rounded-full animate-spin" />

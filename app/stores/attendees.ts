@@ -105,6 +105,16 @@ export const useAttendeesStore = defineStore('attendees', {
         .subscribe()
     },
 
+    async removeAttendee(attendeeId: string) {
+      const supabase = getClient()
+      const { error } = await supabase
+        .from('attendees')
+        .delete()
+        .eq('id', attendeeId)
+      if (error) throw error
+      this.attendees = this.attendees.filter(a => a.id !== attendeeId)
+    },
+
     unsubscribe() {
       if (this.channel) {
         this.channel.unsubscribe()

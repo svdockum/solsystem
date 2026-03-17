@@ -121,6 +121,18 @@ export const useSunStore = defineStore('sun', {
       return sun
     },
 
+    async deleteSun(id: string) {
+      const supabase = getClient()
+      const { error } = await supabase
+        .from('suns')
+        .delete()
+        .eq('id', id)
+
+      if (error) throw new Error(error.message)
+      this.suns = this.suns.filter(s => s.id !== id)
+      if (this.current?.id === id) this.current = null
+    },
+
     async deactivate(id: string) {
       const supabase = getClient()
       const { error } = await supabase

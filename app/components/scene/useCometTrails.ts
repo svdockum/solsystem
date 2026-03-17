@@ -169,7 +169,10 @@ export function useCometTrails(ctx: SceneContext) {
     if (rawCount < 2) return
 
     const { core, bloom, color, style, lengthScale, pulsePhase, pulseFreq } = trail
-    const pulse = 1 + 0.28 * Math.sin(elapsed * pulseFreq + pulsePhase)
+    const sinA  = Math.sin(elapsed * pulseFreq + pulsePhase)
+    const sinB  = Math.sin(elapsed * pulseFreq * 1.7 + pulsePhase + 1.2)
+    const pulse         = 1 + 0.55 * sinA + 0.2 * sinB          // size breathes ±75%
+    const opacityPulse  = 0.7 + 0.3 * Math.abs(sinA)            // opacity 0.7–1.0
 
     // Outer rings get shorter trails — trim from the tail (oldest positions)
     const coreCount  = Math.max(2, Math.floor(rawCount * lengthScale))
@@ -186,8 +189,8 @@ export function useCometTrails(ctx: SceneContext) {
       const t   = i / (coreCount - 1)
       const vis = styleVisibility(i, style)
 
-      core.sizeArr[i]          = (0.25 + t * 0.55) * pulse
-      core.opacityArr[i]       = Math.pow(t, 1.8) * vis
+      core.sizeArr[i]          = (0.25 + t * 0.65) * pulse
+      core.opacityArr[i]       = Math.pow(t, 1.5) * opacityPulse * vis
       core.colorArr[i * 3]     = color.r
       core.colorArr[i * 3 + 1] = color.g
       core.colorArr[i * 3 + 2] = color.b
@@ -204,8 +207,8 @@ export function useCometTrails(ctx: SceneContext) {
       const t   = i / (bloomCount - 1)
       const vis = styleVisibility(bloomOffset + i, style)
 
-      bloom.sizeArr[i]          = (0.8 + t * 1.6) * pulse
-      bloom.opacityArr[i]       = Math.pow(t, 2.5) * 0.45 * vis
+      bloom.sizeArr[i]          = (1.0 + t * 2.2) * pulse
+      bloom.opacityArr[i]       = Math.pow(t, 2.2) * 0.55 * opacityPulse * vis
       bloom.colorArr[i * 3]     = color.r
       bloom.colorArr[i * 3 + 1] = color.g
       bloom.colorArr[i * 3 + 2] = color.b

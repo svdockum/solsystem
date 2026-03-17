@@ -11,7 +11,7 @@
 
   html,
   body {
-    @apply bg-space-950 text-white overflow-hidden;
+    @apply bg-space-950 text-white;
     font-family: 'Inter', system-ui, sans-serif;
   }
 

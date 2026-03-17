@@ -1,73 +1,95 @@
 <template>
-  <aside class="attendee-panel glass-panel flex flex-col">
-    <!-- Header -->
-    <div class="px-4 py-3 border-b border-white/10 flex-shrink-0">
-      <div class="flex items-center justify-between mb-1">
-        <h2 class="font-semibold text-sm tracking-wide text-white/80 uppercase">
-          {{ sunName }}
-        </h2>
-        <span
-          class="text-xs px-2 py-0.5 rounded-full font-mono"
-          :class="count > 0 ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/40'"
-        >
-          {{ count }} {{ count === 1 ? 'planet' : 'planets' }}
-        </span>
-      </div>
-      <p class="text-xs text-white/40">Orbiting the sun</p>
-    </div>
+  <div class="attendee-panel flex flex-col gap-2 pointer-events-none">
 
-    <!-- Attendee list -->
-    <div class="flex-1 overflow-y-auto py-2 min-h-0">
-      <TransitionGroup name="slide-in" tag="ul" class="space-y-0.5 px-2">
-        <li
-          v-for="attendee in sortedAttendees"
-          :key="attendee.id"
-          class="flex items-center gap-3 px-2 py-2 rounded-lg hover:bg-white/5 transition-colors"
-        >
-          <span
-            class="w-3 h-3 rounded-full flex-shrink-0 ring-1 ring-white/20"
-            :style="{ backgroundColor: attendee.color, boxShadow: `0 0 8px ${attendee.color}80` }"
-          />
-          <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-white truncate">{{ attendee.username }}</p>
-            <p v-if="attendee.email" class="text-xs text-white/40 truncate">{{ attendee.email }}</p>
-          </div>
-          <span class="text-xs text-white/30 flex-shrink-0">
-            {{ relativeTime(attendee.joined_at) }}
-          </span>
-        </li>
-      </TransitionGroup>
-
-      <div v-if="count === 0" class="flex flex-col items-center justify-center py-8 px-4 text-center">
-        <div class="text-3xl mb-2 opacity-30">🪐</div>
-        <p class="text-sm text-white/40">No planets yet</p>
-        <p class="text-xs text-white/25 mt-1">Scan the QR code to join</p>
-      </div>
-    </div>
-
-    <!-- Footer: QR code + join button -->
-    <div class="px-4 py-4 border-t border-white/10 flex-shrink-0 space-y-3">
-      <!-- QR code -->
-      <div class="flex flex-col items-center">
-        <div v-if="qrDataUrl" class="bg-white p-2 rounded-lg">
-          <img :src="qrDataUrl" alt="QR code to join" class="w-36 h-36 block" />
-        </div>
-        <div v-else class="w-36 h-36 bg-white/5 rounded-lg animate-pulse" />
-        <p class="text-xs text-white/30 mt-2 text-center break-all font-mono">
-          {{ joinUrl }}
-        </p>
-      </div>
-
-      <!-- Join button -->
-      <NuxtLink
-        :to="`/join/${sunSlug}`"
-        class="btn-primary w-full text-center text-sm block"
-        target="_blank"
+    <!-- ── Attendee list drawer (top) ──────────────────────── -->
+    <div class="pointer-events-auto">
+      <!-- Toggle button -->
+      <button
+        class="w-full glass-panel px-4 py-2.5 flex items-center justify-between
+               hover:border-white/20 transition-all duration-200 group"
+        @click="listOpen = !listOpen"
       >
-        Join this Sun
-      </NuxtLink>
+        <div class="flex items-center gap-2">
+          <span class="text-sm font-semibold text-white/80">{{ sunName }}</span>
+          <span
+            class="text-xs px-1.5 py-0.5 rounded-full font-mono"
+            :class="count > 0 ? 'bg-green-500/20 text-green-400' : 'bg-white/10 text-white/40'"
+          >
+            {{ count }}
+          </span>
+        </div>
+        <span
+          class="text-white/40 text-xs transition-transform duration-300"
+          :class="listOpen ? 'rotate-180' : ''"
+        >▼</span>
+      </button>
+
+      <!-- Animated list panel -->
+      <Transition name="drawer">
+        <div v-if="listOpen" class="glass-panel mt-1 overflow-hidden">
+          <ul class="max-h-64 overflow-y-auto py-2">
+            <TransitionGroup name="slide-in" tag="div">
+              <li
+                v-for="attendee in sortedAttendees"
+                :key="attendee.id"
+                class="flex items-center gap-3 px-3 py-2 hover:bg-white/5 transition-colors"
+              >
+                <span
+                  class="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                  :style="{ backgroundColor: attendee.color, boxShadow: `0 0 6px ${attendee.color}80` }"
+                />
+                <div class="flex-1 min-w-0">
+                  <p class="text-sm font-medium text-white truncate">{{ attendee.username }}</p>
+                  <p v-if="attendee.email" class="text-xs text-white/40 truncate">{{ attendee.email }}</p>
+                </div>
+                <span class="text-xs text-white/30 flex-shrink-0">{{ relativeTime(attendee.joined_at) }}</span>
+              </li>
+            </TransitionGroup>
+            <li v-if="count === 0" class="px-3 py-6 text-center text-sm text-white/30">
+              No planets yet
+            </li>
+          </ul>
+        </div>
+      </Transition>
     </div>
-  </aside>
+
+    <!-- ── QR / Join drawer (bottom) ───────────────────────── -->
+    <div class="pointer-events-auto">
+      <!-- Toggle button -->
+      <button
+        class="w-full glass-panel px-4 py-2.5 flex items-center justify-between
+               hover:border-white/20 transition-all duration-200"
+        @click="qrOpen = !qrOpen"
+      >
+        <span class="text-sm font-semibold text-white/80">Join this Sun</span>
+        <span
+          class="text-white/40 text-xs transition-transform duration-300"
+          :class="qrOpen ? 'rotate-180' : ''"
+        >▼</span>
+      </button>
+
+      <!-- Animated QR panel -->
+      <Transition name="drawer">
+        <div v-if="qrOpen" class="glass-panel mt-1 p-4 space-y-3">
+          <div class="flex flex-col items-center gap-2">
+            <div v-if="qrDataUrl" class="bg-white p-2 rounded-lg">
+              <img :src="qrDataUrl" alt="QR code" class="w-36 h-36 block" />
+            </div>
+            <div v-else class="w-36 h-36 bg-white/5 rounded-lg animate-pulse" />
+            <p class="text-xs text-white/30 text-center break-all font-mono">{{ joinUrl }}</p>
+          </div>
+          <NuxtLink
+            :to="`/join/${sunSlug}`"
+            class="btn-primary w-full text-center text-sm block"
+            target="_blank"
+          >
+            Open join page
+          </NuxtLink>
+        </div>
+      </Transition>
+    </div>
+
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -78,6 +100,9 @@ const props = defineProps<{
   sunSlug: string
   attendees: Attendee[]
 }>()
+
+const listOpen = ref(false)
+const qrOpen = ref(false)
 
 const { generateDataUrl, getJoinUrl } = useQrCode()
 const qrDataUrl = ref('')
@@ -104,14 +129,33 @@ function relativeTime(isoString: string): string {
   if (mins < 1) return 'just now'
   if (mins < 60) return `${mins}m`
   const hrs = Math.floor(mins / 60)
-  if (hrs < 24) return `${hrs}h`
-  return `${Math.floor(hrs / 24)}d`
+  return hrs < 24 ? `${hrs}h` : `${Math.floor(hrs / 24)}d`
 }
 </script>
 
 <style scoped>
 .attendee-panel {
-  width: 280px;
-  height: 100%;
+  width: 268px;
+}
+
+/* Drawer slide-down animation */
+.drawer-enter-active,
+.drawer-leave-active {
+  transition: all 0.28s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+}
+
+.drawer-enter-from,
+.drawer-leave-to {
+  opacity: 0;
+  transform: translateY(-8px);
+  max-height: 0 !important;
+}
+
+.drawer-enter-to,
+.drawer-leave-from {
+  opacity: 1;
+  transform: translateY(0);
+  max-height: 400px;
 }
 </style>
