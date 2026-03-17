@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-sun: #FDB813;
+    --color-sun-glow: #FF8C00;
+    --color-space-bg: #000005;
+  }
+
+  html,
+  body {
+    @apply bg-space-950 text-white overflow-hidden;
+    font-family: 'Inter', system-ui, sans-serif;
+  }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.05);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 3px;
+  }
+}
+
+@layer components {
+  .glass-panel {
+    @apply bg-black/60 backdrop-blur-md border border-white/10 rounded-xl;
+  }
+
+  .sun-glow-text {
+    color: var(--color-sun);
+    text-shadow: 0 0 20px var(--color-sun-glow);
+  }
+
+  .btn-primary {
+    @apply px-4 py-2 rounded-lg font-medium transition-all duration-200;
+    background: linear-gradient(135deg, #FDB813 0%, #FF8C00 100%);
+    color: #000;
+  }
+
+  .btn-primary:hover {
+    @apply scale-105 brightness-110;
+  }
+
+  .btn-ghost {
+    @apply px-4 py-2 rounded-lg font-medium border border-white/20 text-white/80
+      hover:bg-white/10 hover:text-white transition-all duration-200;
+  }
+
+  .input-field {
+    @apply w-full px-3 py-2 rounded-lg bg-white/5 border border-white/10
+      text-white placeholder-white/30 focus:outline-none focus:border-white/30
+      focus:ring-1 focus:ring-white/20 transition-all duration-200;
+  }
+}
+
+/* Slide-in transition for attendee list */
+.slide-in-enter-active,
+.slide-in-leave-active {
+  transition: all 0.35s ease;
+}
+
+.slide-in-enter-from {
+  opacity: 0;
+  transform: translateX(20px);
+}
+
+.slide-in-leave-to {
+  opacity: 0;
+  transform: translateX(-20px);
+}
+
+/* Fade transition */
+.fade-enter-active,
+.fade-leave-active {
+  transition: opacity 0.3s ease;
+}
+
+.fade-enter-from,
+.fade-leave-to {
+  opacity: 0;
+}
