@@ -10,11 +10,16 @@
         <div class="text-6xl mb-4">☀️</div>
         <h1 class="text-5xl font-bold sun-glow-text mb-3">SolSystem</h1>
         <p class="text-white/50 text-lg max-w-md mx-auto">
-          Create an event, share a QR code, and watch attendees become planets orbiting your Sun.
+          Create a session, scan student barcodes or share a QR code, and watch attendees become planets orbiting your Sun.
         </p>
-        <button class="btn-primary mt-8 px-8 py-3 text-base" @click="showCreate = true">
-          Create a Sun
-        </button>
+        <div class="flex items-center justify-center gap-3 mt-8">
+          <button class="btn-primary px-8 py-3 text-base" @click="showCreate = true">
+            Create a Sun
+          </button>
+          <NuxtLink to="/scan" class="btn-ghost px-8 py-3 text-base">
+            Open scanner
+          </NuxtLink>
+        </div>
       </div>
     </div>
 
@@ -38,7 +43,7 @@
         <h2 class="text-sm uppercase tracking-widest text-white/30 mb-4 font-medium">
           Active Suns
         </h2>
-        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <SunCard
             v-for="sun in sunStore.activeSuns"
             :key="sun.id"
@@ -58,7 +63,7 @@
 </template>
 
 <script setup lang="ts">
-definePageMeta({ layout: 'manage' })
+definePageMeta({ layout: 'manage', middleware: 'auth' })
 
 const sunStore = useSunStore()
 const showCreate = ref(false)

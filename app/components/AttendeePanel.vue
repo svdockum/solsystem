@@ -39,8 +39,7 @@
                   :style="{ backgroundColor: attendee.color, boxShadow: `0 0 6px ${attendee.color}80` }"
                 />
                 <div class="flex-1 min-w-0">
-                  <p class="text-sm font-medium text-white truncate">{{ attendee.username }}</p>
-                  <p v-if="attendee.email" class="text-xs text-white/40 truncate">{{ attendee.email }}</p>
+                  <p class="text-sm font-medium text-white truncate">{{ attendee.username || 'Student' }}</p>
                 </div>
                 <span class="text-xs text-white/30 flex-shrink-0">{{ relativeTime(attendee.joined_at) }}</span>
               </li>

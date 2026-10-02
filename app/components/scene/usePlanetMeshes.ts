@@ -8,6 +8,8 @@ interface Planet {
   mesh: THREE.Mesh
   innerGlow: THREE.Mesh
   outerGlow: THREE.Mesh
+  label: THREE.Sprite | null  // student number above a scanned planet
+  labelText: string
   ringRadius: number    // key into sharedRings
   angle: number
   attendee: Attendee
@@ -46,6 +48,49 @@ function buildOrbitRingLine(radius: number): THREE.Line {
   const line = new THREE.Line(geo, mat)
   line.frustumCulled = false
   return line
+}
+
+const LABEL_HEIGHT = 2.4 // world units; ~40px on a 1080p wall screen
+
+// Scanned planets carry the student number as username ('' when hidden)
+function labelTextFor(attendee: Attendee): string {
+  return attendee.source === 'scan' ? attendee.username : ''
+}
+
+function createLabelSprite(text: string): THREE.Sprite {
+  const fontSize = 64
+  const padding = 16
+  const font = `600 ${fontSize}px system-ui, sans-serif`
+
+  const canvas = document.createElement('canvas')
+  const c = canvas.getContext('2d')!
+  c.font = font
+  canvas.width = Math.ceil(c.measureText(text).width) + padding * 2
+  canvas.height = fontSize + padding * 2
+
+  // Resizing a canvas resets its drawing state
+  c.font = font
+  c.textAlign = 'center'
+  c.textBaseline = 'middle'
+  c.shadowColor = 'rgba(0, 0, 0, 0.9)'
+  c.shadowBlur = 8
+  c.fillStyle = '#ffffff'
+  c.fillText(text, canvas.width / 2, canvas.height / 2)
+
+  const texture = new THREE.CanvasTexture(canvas)
+  texture.colorSpace = THREE.SRGBColorSpace
+
+  const sprite = new THREE.Sprite(
+    new THREE.SpriteMaterial({ map: texture, transparent: true, depthWrite: false }),
+  )
+  sprite.scale.set(LABEL_HEIGHT * (canvas.width / canvas.height), LABEL_HEIGHT, 1)
+  return sprite
+}
+
+function disposeLabel(sprite: THREE.Sprite, scene: THREE.Scene) {
+  scene.remove(sprite)
+  sprite.material.map?.dispose()
+  sprite.material.dispose()
 }
 
 function createPlanetMesh(attendee: Attendee, scene: THREE.Scene): {
@@ -126,6 +171,19 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
     }
   }
 
+  // ── Labels ───────────────────────────────────────────────────────
+  const setLabel = (planet: Planet, text: string) => {
+    if (planet.labelText === text) return
+    if (planet.label) disposeLabel(planet.label, ctx.scene)
+    planet.label = null
+    planet.labelText = text
+    if (text) {
+      planet.label = createLabelSprite(text)
+      planet.label.visible = false // shown once the planet has grown in
+      ctx.scene.add(planet.label)
+    }
+  }
+
   // ── Planet lifecycle ─────────────────────────────────────────────
   const addPlanet = (attendee: Attendee) => {
     if (planets.has(attendee.id)) return
@@ -137,10 +195,12 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
     innerGlow.scale.setScalar(0)
     outerGlow.scale.setScalar(0)
 
-    planets.set(attendee.id, {
+    const planet: Planet = {
       mesh,
       innerGlow,
       outerGlow,
+      label: null,
+      labelText: '',
       ringRadius: attendee.orbit_radius,
       angle: attendee.orbit_phase,
       attendee,
@@ -149,7 +209,9 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
       pulsePhase: Math.random() * Math.PI * 2,
       pulseFreq: 1.4 + Math.random() * 0.8,
       spinSpeed: (Math.random() < 0.5 ? 1 : -1) * (3.0 + Math.random() * 5.0), // ±3.0–8.0 rad/s, random direction
-    })
+    }
+    planets.set(attendee.id, planet)
+    setLabel(planet, labelTextFor(attendee))
 
     trails.addTrail(attendee.id, attendee.color, attendee.orbit_radius)
   }
@@ -170,6 +232,7 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
       if (Array.isArray(mat)) mat.forEach(m => m.dispose())
       else (mat as THREE.Material).dispose()
     }
+    if (planet.label) disposeLabel(planet.label, ctx.scene)
 
     releaseRing(planet.ringRadius)
     trails.removeTrail(id)
@@ -211,6 +274,11 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
       planet.outerGlow.position.set(x, 0, z)
       planet.mesh.rotation.y += dt * planet.spinSpeed
 
+      if (planet.label) {
+        planet.label.position.set(x, planet.attendee.planet_size * 2.4 + LABEL_HEIGHT / 2, z)
+        planet.label.visible = planet.targetScale > 0 && planet.currentScale > 0.5
+      }
+
       if (planet.currentScale > 0.1) {
         trails.updateTrail(id, x, 0, z, elapsed)
       }
@@ -226,9 +294,12 @@ export function usePlanetMeshes(ctx: SceneContext, attendees: Ref<Attendee[]>) {
     (list) => {
       const currentIds = new Set(list.map(a => a.id))
 
-      // Add any attendee not yet in the planets Map
+      // Add any attendee not yet in the planets Map; refresh labels of the others
+      // (student numbers can be shown or hidden while the scene is running)
       for (const attendee of list) {
-        if (!planets.has(attendee.id)) addPlanet(attendee)
+        const planet = planets.get(attendee.id)
+        if (planet) setLabel(planet, labelTextFor(attendee))
+        else addPlanet(attendee)
       }
 
       // Remove any planet whose attendee has left

@@ -28,6 +28,7 @@
     <!-- Top-left: sun name + back link -->
     <div v-if="sun" class="absolute top-4 left-4 z-10">
       <NuxtLink
+        v-if="auth.user"
         to="/"
         class="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm"
       >
@@ -46,7 +47,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Sun } from '~/types'
+import type { PublicSun } from '~/types'
 import SolarScene from '~/components/scene/SolarScene.vue'
 
 definePageMeta({ layout: 'default' })
@@ -56,8 +57,9 @@ const slug = route.params.slug as string
 
 const supabase = useSupabase()
 const attendeesStore = useAttendeesStore()
+const auth = useAuthStore()
 
-const sun = ref<Sun | null>(null)
+const sun = ref<PublicSun | null>(null)
 const loading = ref(true)
 const hasToken = ref(false)
 
@@ -68,13 +70,10 @@ const { leave } = useHeartbeat(sunId, sunSlug)
 
 onMounted(async () => {
   const { data } = await supabase
-    .from('suns')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single()
+    .rpc('get_sun_by_slug', { p_slug: slug })
+    .maybeSingle()
 
-  sun.value = data as Sun | null
+  sun.value = data as PublicSun | null
   loading.value = false
 
   if (sun.value) {
@@ -90,6 +89,6 @@ onUnmounted(() => {
 
 async function handleLeave() {
   await leave()
-  await navigateTo('/')
+  await navigateTo(`/join/${slug}`)
 }
 </script>

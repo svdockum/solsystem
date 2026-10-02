@@ -22,11 +22,15 @@
       </span>
     </div>
 
-    <div class="flex gap-2">
-      <NuxtLink :to="`/sun/${sun.slug}`" class="btn-primary flex-1 text-center text-sm py-2">
+    <!-- Three equal columns; reduced horizontal padding so all labels fit -->
+    <div class="grid grid-cols-3 gap-2">
+      <NuxtLink :to="`/sun/${sun.slug}`" class="btn-primary min-w-0 px-2 text-center text-sm py-2">
         View
       </NuxtLink>
-      <NuxtLink :to="`/manage/${sun.id}`" class="btn-ghost flex-1 text-center text-sm py-2">
+      <NuxtLink :to="`/scan/${sun.id}`" class="btn-ghost min-w-0 px-2 text-center text-sm py-2">
+        Scan
+      </NuxtLink>
+      <NuxtLink :to="`/manage/${sun.id}`" class="btn-ghost min-w-0 px-2 text-center text-sm py-2">
         Manage
       </NuxtLink>
     </div>

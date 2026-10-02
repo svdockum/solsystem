@@ -9,9 +9,7 @@
     <div class="relative w-full max-w-sm">
       <!-- Logo -->
       <div class="text-center mb-8">
-        <NuxtLink to="/" class="inline-block">
-          <span class="text-5xl">☀️</span>
-        </NuxtLink>
+        <span class="text-5xl">☀️</span>
         <h1 class="sun-glow-text text-2xl font-bold mt-2">SolSystem</h1>
       </div>
 
@@ -24,8 +22,7 @@
       <!-- Sun not found -->
       <div v-else-if="!sun" class="glass-panel p-8 text-center">
         <p class="text-white/60 mb-1">Sun not found</p>
-        <p class="text-white/30 text-sm mb-5">This Sun may have ended or doesn't exist.</p>
-        <NuxtLink to="/" class="btn-ghost text-sm">View all Suns</NuxtLink>
+        <p class="text-white/30 text-sm">This Sun may have ended or doesn't exist.</p>
       </div>
 
       <!-- Idle message -->
@@ -63,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Sun } from '~/types'
+import type { PublicSun } from '~/types'
 
 definePageMeta({ layout: 'default' })
 
@@ -72,19 +69,16 @@ const slug = route.params.slug as string
 const idleRedirect = route.query.idle === '1'
 
 const supabase = useSupabase()
-const sun = ref<Sun | null>(null)
+const sun = ref<PublicSun | null>(null)
 const loading = ref(true)
 const alreadyJoined = ref(false)
 
 onMounted(async () => {
   const { data } = await supabase
-    .from('suns')
-    .select('*')
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single()
+    .rpc('get_sun_by_slug', { p_slug: slug })
+    .maybeSingle()
 
-  sun.value = data as Sun | null
+  sun.value = data as PublicSun | null
   loading.value = false
 
   if (sun.value) {

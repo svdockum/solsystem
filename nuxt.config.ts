@@ -1,7 +1,9 @@
 // https://nuxt.com/docs/api/configuration/nuxt-config
 export default defineNuxtConfig({
-  future: { compatibilityVersion: 4 },
   compatibilityDate: '2025-07-15',
+  // Client-side only: the Supabase login session lives in localStorage, and
+  // the 3D scene (Three.js) and the barcode scanner (camera) need browser APIs.
+  ssr: false,
   css: ['~/assets/css/main.css'],
   modules: ['@nuxtjs/tailwindcss', '@pinia/nuxt', '@vueuse/nuxt'],
   runtimeConfig: {
@@ -10,17 +12,12 @@ export default defineNuxtConfig({
       supabaseAnonKey: process.env.SUPABASE_ANON_KEY ?? '',
     },
   },
-  // Three.js requires browser APIs — disable SSR for scene and join pages
-  routeRules: {
-    '/sun/**': { ssr: false },
-    '/join/**': { ssr: false },
-  },
   app: {
     head: {
       title: 'SolSystem',
       meta: [
         { charset: 'utf-8' },
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
+        { name: 'viewport', content: 'width=device-width, initial-scale=1, viewport-fit=cover' },
         { name: 'theme-color', content: '#000005' },
       ],
     },

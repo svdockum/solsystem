@@ -2,11 +2,38 @@
 
 ## Overview
 
-SolSystem is an attendee registration and engagement system that turns event participation into a live 3D solar system. Each event is a **Sun**. Each participant becomes a uniquely colored **planet** that orbits the Sun with a glowing comet trail. Participants join by scanning a QR code, entering a username, and optionally an email address.
+SolSystem is an attendee registration and engagement system that turns event participation into a live 3D solar system. Each event is a **Sun**. Each participant becomes a uniquely colored **planet** that orbits the Sun with a glowing comet trail. A Sun is owned by a teacher, who logs in. Planets arrive in two ways: the teacher scans a student's barcode (student number) with their phone, or a participant joins by scanning a QR code and entering a username.
 
 ---
 
 ## Functional Requirements
+
+### Teacher login
+
+| Requirement | Detail |
+|---|---|
+| Account | Email + password (Supabase Auth); sign-up on the login page |
+| Protected pages | `/`, `/scan/**`, `/manage/**` redirect to `/login` when not logged in |
+| Isolation | A teacher only sees their own Suns, scans and attendee emails |
+| Public pages | `/join/[slug]` and `/sun/[slug]` need no login; the slug is the share link |
+
+### Barcode attendance (scanner)
+
+| Requirement | Detail |
+|---|---|
+| Session | A Sun is a scanner session. `/scan` creates one from a name (e.g. the lesson) or reopens an earlier one |
+| Scanner | `/scan/[id]` on the teacher's phone: the camera stays on and reads 1D barcodes (Code 128/39/93, Codabar, ITF, EAN, UPC) |
+| Scan feedback | The whole screen flashes bright white on every scan (plus a short vibration where supported) |
+| Stored per scan | Student number, direction, date and time (`scanned_at`), answer |
+| Enter / Leave switch | A switch in the scanner; its position is remembered on the session. A session holds both an enter and a leave scan per student |
+| Enter question | "How is your energy?" — ⚡ Energetic / 🙂 Fine / 😴 Tired |
+| Leave question | "How good was it?" — Outstanding / Good / Normal / Could be better / Very boring |
+| Answer flow | Buttons appear under the camera for the latest scan. A tap shows a thank-you screen with "Change my answer" to go back. Answering is optional: the next scan takes over the panel |
+| Double scan | Scanning the same student again in the same direction overwrites the time and clears the answer |
+| Re-scan guard | A barcode is read twice before it counts and only counts again after 4 seconds out of view |
+| List | The scanner's List button and the Manage page show every student with in/out time and answers; a student can be removed; a number can be added by hand |
+| Planets | An enter scan puts a randomly coloured planet in orbit; a leave scan removes it |
+| Student numbers on the live view | Per-Sun setting on the Manage page, off by default. When on, the number floats above the planet and appears in the attendee panel |
 
 ### Suns (Events)
 
@@ -33,10 +60,12 @@ SolSystem is an attendee registration and engagement system that turns event par
 | Property | Range | Method |
 |---|---|---|
 | Color | Curated 25-color palette | Random from list |
-| Planet size | 0.4 – 1.2 (Three.js units) | `Math.random()` |
-| Orbit radius | 4 – 18 (slot-based, 1.6 spacing) | Find first unused slot |
-| Orbit speed | 0.05 – 0.2 rad/s | `Math.random()` |
-| Orbit phase | 0 – 2π | `Math.random()` (initial angle) |
+| Planet size | 0.35 – 0.90 (Three.js units) | Random |
+| Orbit radius | 15 fixed rings, 9.5 – 27.7 | Random ring (planets share rings) |
+| Orbit speed | 0.162 – 1.134 rad/s | Random |
+| Orbit phase | 0 – 2π | Random (initial angle) |
+
+QR joins pick these in the browser (`useJoin.ts`); scanned students get them from the `record_scan()` database function.
 
 ### Idle / Presence Management
 
@@ -45,9 +74,9 @@ SolSystem is an attendee registration and engagement system that turns event par
 | Heartbeat RPC | Every 60 seconds | Updates `last_heartbeat` in DB |
 | Client idle timeout | 9 minutes of no user activity | Calls `leave_sun` RPC, redirects to join page |
 | Server cleanup | Every 1 minute (pg_cron) | Deletes rows where `last_heartbeat < now() - 10min` |
-| Voluntary leave | "Leave orbit" button | Calls `leave_sun` RPC, navigates home |
+| Voluntary leave | "Leave orbit" button | Calls `leave_sun` RPC, returns to the join page |
 
-The two-layer approach (client 9min + server 10min) ensures stale planets are cleared even when users close their tab without triggering the beforeunload event.
+The two-layer approach (client 9min + server 10min) ensures stale planets are cleared even when users close their tab without triggering the beforeunload event. This applies to QR attendees only; scanned planets stay until the student is scanned out.
 
 ### Live 3D View
 
@@ -65,7 +94,7 @@ The two-layer approach (client 9min + server 10min) ensures stale planets are cl
 ### Attendee Panel
 
 - Fixed sidebar overlay (right side, 280px wide) on the live view
-- Lists all current planets with color dot, username, optional email, time since joining
+- Lists all current planets with color dot, name (or student number when shown), time since joining
 - `<TransitionGroup>` slide animation for join/leave events
 - "Join this Sun" link for viewers who haven't joined yet (opens in new tab)
 
@@ -86,12 +115,17 @@ The two-layer approach (client 9min + server 10min) ensures stale planets are cl
 
 ## Page Routes
 
-| Route | Purpose | SSR |
+The app renders client-side only (no SSR).
+
+| Route | Purpose | Login |
 |---|---|---|
-| `/` | Directory of active Suns + create | Yes |
+| `/login` | Teacher login / sign-up | — |
+| `/` | The teacher's Suns + create | Yes |
+| `/scan` | Start a new scanner session or reopen one | Yes |
+| `/scan/[id]` | Barcode scanner, answers, scanned list | Yes |
+| `/manage/[id]` | Sun management: scanned list, settings, QR, attendees, deactivate | Yes |
 | `/join/[slug]` | QR-code landing page, join form | No |
 | `/sun/[slug]` | Live 3D solar system view | No |
-| `/manage/[id]` | Sun management: QR, attendees, deactivate | Yes |
 
 ---
 
@@ -99,14 +133,21 @@ The two-layer approach (client 9min + server 10min) ensures stale planets are cl
 
 ```
 suns
-  id, name, slug (unique), description, is_active, created_at, updated_at
+  id, owner_id → auth.users.id, name, slug (unique), description, is_active,
+  show_student_numbers, scan_mode (enter|leave), created_at, updated_at
 
-attendees
-  id, sun_id → suns.id, username, email, color, planet_size, orbit_radius,
-  orbit_speed, orbit_phase, last_heartbeat, joined_at, session_token (unique)
+scans                                   -- private to the Sun's owner
+  id, sun_id → suns.id, student_number, direction (enter|leave),
+  mood (energetic|fine|tired), rating (outstanding|good|normal|could_be_better|very_boring),
+  scanned_at; unique (sun_id, student_number, direction)
+
+attendees                               -- the planets; public except *
+  id, sun_id → suns.id, source (qr|scan), username, color, planet_size, orbit_radius,
+  orbit_speed, orbit_phase, last_heartbeat, joined_at,
+  email*, student_number*, session_token* (unique)
 ```
 
-All write operations (heartbeat, leave) go through `security definer` RPC functions that accept the session token as a parameter. This avoids needing user authentication while still providing ownership proof.
+The schema is defined in `supabase/migrations/`. Scans are written through the `record_scan` RPC, which also adds or removes the student's planet. QR attendees' heartbeat and leave go through RPCs that take the session token as ownership proof.
 
 ---
 

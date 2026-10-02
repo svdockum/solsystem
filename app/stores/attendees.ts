@@ -10,11 +10,14 @@ function getClient() {
   return createClient(config.public.supabaseUrl, config.public.supabaseAnonKey)
 }
 
-const ATTENDEE_COLUMNS = 'id,sun_id,username,email,color,planet_size,orbit_radius,orbit_speed,orbit_phase,last_heartbeat,joined_at'
+// email, student_number and session_token are not readable by clients
+const ATTENDEE_COLUMNS = 'id,sun_id,source,username,color,planet_size,orbit_radius,orbit_speed,orbit_phase,last_heartbeat,joined_at'
 
 export const useAttendeesStore = defineStore('attendees', {
   state: () => ({
     attendees: [] as Attendee[],
+    // attendee id → email; only filled for the sun's owner (manage page)
+    emails: {} as Record<string, string>,
     channel: null as RealtimeChannel | null,
     loading: false,
   }),
@@ -44,6 +47,18 @@ export const useAttendeesStore = defineStore('attendees', {
       } finally {
         this.loading = false
       }
+    },
+
+    // Emails of QR attendees, via an owner-only RPC
+    async fetchEmails(sunId: string) {
+      const supabase = getClient()
+      const { data, error } = await supabase.rpc('get_attendee_emails', { p_sun_id: sunId })
+      if (error) throw error
+      const map: Record<string, string> = {}
+      for (const row of (data ?? []) as { id: string, email: string }[]) {
+        map[row.id] = row.email
+      }
+      this.emails = map
     },
 
     subscribeToSun(sunId: string) {
@@ -121,6 +136,7 @@ export const useAttendeesStore = defineStore('attendees', {
         this.channel = null
       }
       this.attendees = []
+      this.emails = {}
     },
   },
 })

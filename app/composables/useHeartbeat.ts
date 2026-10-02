@@ -19,7 +19,7 @@ export function useHeartbeat(sunId: Ref<string>, sunSlug: Ref<string>) {
   }
 
   const deleteAttendee = async (token: string) => {
-    await supabase.from('attendees').delete().eq('session_token', token)
+    await supabase.rpc('leave_sun', { p_token: token })
     sessionStorage.removeItem(`solsystem_token_${sunId.value}`)
   }
 

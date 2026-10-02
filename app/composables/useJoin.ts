@@ -1,7 +1,8 @@
 import type { Attendee, JoinPayload, JoinResult } from '~/types'
 import { randomRingRadius } from '~/utils/orbits'
 
-// Curated palette - vibrant, space-appropriate, visible on dark backgrounds
+// Curated palette - vibrant, space-appropriate, visible on dark backgrounds.
+// Scanned planets get theirs in SQL: keep record_scan() in the migrations in sync.
 const PLANET_COLORS = [
   '#FF6B6B', '#FF9F43', '#FECA57', '#48DBFB', '#FF9FF3',
   '#54A0FF', '#5F27CD', '#00D2D3', '#1DD1A1', '#C44569',
@@ -33,7 +34,7 @@ export function useJoin() {
         orbit_radius: randomRingRadius(),                 // one of 15 fixed rings, random pick
         session_token: sessionToken,
       })
-      .select('id, sun_id, username, email, color, planet_size, orbit_radius, orbit_speed, orbit_phase, last_heartbeat, joined_at')
+      .select('id, sun_id, source, username, color, planet_size, orbit_radius, orbit_speed, orbit_phase, last_heartbeat, joined_at')
       .single()
 
     if (error) throw error

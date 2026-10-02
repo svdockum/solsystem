@@ -34,6 +34,7 @@ export const useSunStore = defineStore('sun', {
   },
 
   actions: {
+    // RLS limits this to the suns owned by the logged-in teacher
     async fetchAll() {
       this.loading = true
       this.error = null
@@ -49,30 +50,6 @@ export const useSunStore = defineStore('sun', {
         this.suns = data as Sun[]
       } catch (e: unknown) {
         this.error = e instanceof Error ? e.message : 'Failed to load suns'
-      } finally {
-        this.loading = false
-      }
-    },
-
-    async fetchBySlug(slug: string) {
-      this.loading = true
-      this.error = null
-      try {
-        const supabase = getClient()
-        const { data, error } = await supabase
-          .from('suns')
-          .select('*')
-          .eq('slug', slug)
-          .eq('is_active', true)
-          .single()
-
-        if (error) throw error
-        this.current = data as Sun
-        return data as Sun
-      } catch (e: unknown) {
-        this.error = e instanceof Error ? e.message : 'Sun not found'
-        this.current = null
-        return null
       } finally {
         this.loading = false
       }
@@ -118,6 +95,23 @@ export const useSunStore = defineStore('sun', {
       if (error) throw new Error(error.message)
       const sun = data as Sun
       this.suns.unshift(sun)
+      return sun
+    },
+
+    async updateSettings(id: string, patch: Partial<Pick<Sun, 'show_student_numbers' | 'scan_mode'>>) {
+      const supabase = getClient()
+      const { data, error } = await supabase
+        .from('suns')
+        .update(patch)
+        .eq('id', id)
+        .select('*')
+        .single()
+
+      if (error) throw new Error(error.message)
+      const sun = data as Sun
+      const idx = this.suns.findIndex(s => s.id === id)
+      if (idx !== -1) this.suns[idx] = sun
+      if (this.current?.id === id) this.current = sun
       return sun
     },
 
