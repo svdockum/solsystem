@@ -53,8 +53,8 @@
           <span>
             <span class="block text-sm font-medium">Show student numbers on the live view</span>
             <span class="block text-xs text-white/40 mt-0.5">
-              Planets are named after the student number; anyone with the live link can read it.
-              Switch off to show them as "Student".
+              Scanned planets are listed by student number; anyone with the live link can read it.
+              Switch off to list them as "Student".
             </span>
           </span>
           <input

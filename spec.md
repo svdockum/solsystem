@@ -33,7 +33,7 @@ SolSystem is an attendee registration and engagement system that turns event par
 | Re-scan guard | A barcode is read twice before it counts and only counts again after 4 seconds out of view |
 | List | The scanner's List button and the Manage page show every student with in/out time and answers; a student can be removed; a number can be added by hand |
 | Planets | An enter scan puts a randomly coloured planet in orbit, named after the student number; a leave scan removes it |
-| Student numbers on the live view | The number floats above the planet and appears in the attendee panel. A per-Sun setting on the Manage page (on by default) hides the numbers; planets then show as "Student" |
+| Student numbers on the live view | The number is the planet's name in the attendee panel; the 3D scene itself shows no text. A per-Sun setting on the Manage page (on by default) hides the numbers; planets then show as "Student" |
 
 ### Suns (Events)
 

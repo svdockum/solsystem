@@ -22,9 +22,9 @@
 
 `ssr: false` for the whole app. Three.js needs `window`/WebGL, the scanner needs the camera, and the teacher's Supabase session lives in `localStorage` — so the server could not render any page meaningfully or know who is logged in. The route middleware (`app/middleware/auth.ts`) therefore runs in the browser only, after the Supabase plugin has restored the session.
 
-### Planet labels
+### No labels in the 3D scene
 
-Scanned planets can show the student number as a `THREE.Sprite` with a `CanvasTexture` (see `usePlanetMeshes.ts`). The label text is the attendee's `username`; the database writes the student number there only while the Sun's `show_student_numbers` setting is on (the default), so hidden numbers never reach the public page.
+Planets carry no text. Names and student numbers appear only in the attendee panel beside the scene. For scanned planets the name is the attendee's `username`; the database writes the student number there only while the Sun's `show_student_numbers` setting is on (the default), so hidden numbers never reach the public page.
 
 ---
 
@@ -128,7 +128,7 @@ Security properties, all enforced in the database (`supabase/migrations/`):
 - **Suns:** readable and writable by their owner only. Anonymous visitors cannot list Suns; the live view and join page fetch one by exact slug through the `get_sun_by_slug` RPC, so the slug acts as the share link.
 - **Scans (student numbers, times, answers):** owner only. Rows are created through `record_scan()`, which checks ownership.
 - **Planets (`attendees`):** publicly readable — they are what the wall screen renders — but `email`, `student_number` and `session_token` are excluded by column-level grants for every client role. The owner reads emails through the `get_attendee_emails` RPC.
-- **Student numbers on the live view:** shown by default; the owner can switch them off per Sun (`show_student_numbers`). While on, the number is copied into the public planet label, and anyone with the live link can read it. While off, the number never reaches the public page.
+- **Student numbers on the live view:** shown by default; the owner can switch them off per Sun (`show_student_numbers`). While on, the number is the planet's public name in the attendee panel, and anyone with the live link can read it. While off, the number never reaches the public page.
 - **QR attendees:** ownership via a session token (UUID v4) in `sessionStorage`; heartbeat and leave require it via RPC. Only the Sun owner can remove other planets.
 - **No CSRF risk:** All mutations use the Supabase client (JSON over HTTPS), not form submissions.
 
@@ -153,7 +153,7 @@ solsystem/
 │   │   └── scene/
 │   │       ├── SolarScene.vue       # Vue wrapper for Three.js canvas
 │   │       ├── useSolarScene.ts     # Scene setup, animation loop
-│   │       ├── usePlanetMeshes.ts   # Planet lifecycle, orbit update, labels
+│   │       ├── usePlanetMeshes.ts   # Planet lifecycle + orbit update
 │   │       └── useCometTrails.ts    # Trail ring-buffer renderer
 │   ├── composables/
 │   │   ├── useSupabase.ts           # Supabase client accessor
