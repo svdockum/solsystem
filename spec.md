@@ -32,8 +32,8 @@ SolSystem is an attendee registration and engagement system that turns event par
 | Double scan | Scanning the same student again in the same direction overwrites the time and clears the answer |
 | Re-scan guard | A barcode is read twice before it counts and only counts again after 4 seconds out of view |
 | List | The scanner's List button and the Manage page show every student with in/out time and answers; a student can be removed; a number can be added by hand |
-| Planets | An enter scan puts a randomly coloured planet in orbit; a leave scan removes it |
-| Student numbers on the live view | Per-Sun setting on the Manage page, off by default. When on, the number floats above the planet and appears in the attendee panel |
+| Planets | An enter scan puts a randomly coloured planet in orbit, named after the student number; a leave scan removes it |
+| Student numbers on the live view | The number floats above the planet and appears in the attendee panel. A per-Sun setting on the Manage page (on by default) hides the numbers; planets then show as "Student" |
 
 ### Suns (Events)
 
@@ -96,7 +96,12 @@ The two-layer approach (client 9min + server 10min) ensures stale planets are cl
 - Fixed sidebar overlay (right side, 280px wide) on the live view
 - Lists all current planets with color dot, name (or student number when shown), time since joining
 - `<TransitionGroup>` slide animation for join/leave events
-- "Join this Sun" link for viewers who haven't joined yet (opens in new tab)
+
+### Join QR on the live view
+
+- Shown on the left side of the live view, under the Sun's name
+- − / + buttons resize it in steps (96 – 500 px); the size is remembered in the browser
+- "Scan to join" opens the join page in a new tab
 
 ---
 

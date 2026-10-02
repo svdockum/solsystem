@@ -24,7 +24,7 @@
 
 ### Planet labels
 
-Scanned planets can show the student number as a `THREE.Sprite` with a `CanvasTexture` (see `usePlanetMeshes.ts`). The label text is the attendee's `username`; the database writes the student number there only while the Sun's `show_student_numbers` setting is on, so hidden numbers never reach the public page.
+Scanned planets can show the student number as a `THREE.Sprite` with a `CanvasTexture` (see `usePlanetMeshes.ts`). The label text is the attendee's `username`; the database writes the student number there only while the Sun's `show_student_numbers` setting is on (the default), so hidden numbers never reach the public page.
 
 ---
 
@@ -128,7 +128,7 @@ Security properties, all enforced in the database (`supabase/migrations/`):
 - **Suns:** readable and writable by their owner only. Anonymous visitors cannot list Suns; the live view and join page fetch one by exact slug through the `get_sun_by_slug` RPC, so the slug acts as the share link.
 - **Scans (student numbers, times, answers):** owner only. Rows are created through `record_scan()`, which checks ownership.
 - **Planets (`attendees`):** publicly readable — they are what the wall screen renders — but `email`, `student_number` and `session_token` are excluded by column-level grants for every client role. The owner reads emails through the `get_attendee_emails` RPC.
-- **Student numbers on the live view:** opt-in per Sun (`show_student_numbers`). When on, the number is copied into the public planet label, and anyone with the live link can read it.
+- **Student numbers on the live view:** shown by default; the owner can switch them off per Sun (`show_student_numbers`). While on, the number is copied into the public planet label, and anyone with the live link can read it. While off, the number never reaches the public page.
 - **QR attendees:** ownership via a session token (UUID v4) in `sessionStorage`; heartbeat and leave require it via RPC. Only the Sun owner can remove other planets.
 - **No CSRF risk:** All mutations use the Supabase client (JSON over HTTPS), not form submissions.
 
@@ -145,6 +145,7 @@ solsystem/
 │   │   ├── AttendeePanel.vue        # Sidebar overlay on live view
 │   │   ├── ConfirmModal.vue         # Generic confirm dialog
 │   │   ├── JoinForm.vue             # Username + email form
+│   │   ├── JoinQr.vue               # Resizable join QR on the live view
 │   │   ├── QrCodeDisplay.vue        # QR rendering + download
 │   │   ├── ScanList.vue             # Scanned students: in/out time + answer
 │   │   ├── SunCard.vue              # Card on index page

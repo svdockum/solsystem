@@ -1,7 +1,7 @@
 <template>
   <div class="attendee-panel flex flex-col gap-2 pointer-events-none">
 
-    <!-- ── Attendee list drawer (top) ──────────────────────── -->
+    <!-- ── Attendee list drawer ────────────────────────────── -->
     <div class="pointer-events-auto">
       <!-- Toggle button -->
       <button
@@ -52,42 +52,6 @@
       </Transition>
     </div>
 
-    <!-- ── QR / Join drawer (bottom) ───────────────────────── -->
-    <div class="pointer-events-auto">
-      <!-- Toggle button -->
-      <button
-        class="w-full glass-panel px-4 py-2.5 flex items-center justify-between
-               hover:border-white/20 transition-all duration-200"
-        @click="qrOpen = !qrOpen"
-      >
-        <span class="text-sm font-semibold text-white/80">Join this Sun</span>
-        <span
-          class="text-white/40 text-xs transition-transform duration-300"
-          :class="qrOpen ? 'rotate-180' : ''"
-        >▼</span>
-      </button>
-
-      <!-- Animated QR panel -->
-      <Transition name="drawer">
-        <div v-if="qrOpen" class="glass-panel mt-1 p-4 space-y-3">
-          <div class="flex flex-col items-center gap-2">
-            <div v-if="qrDataUrl" class="bg-white p-2 rounded-lg">
-              <img :src="qrDataUrl" alt="QR code" class="w-36 h-36 block" />
-            </div>
-            <div v-else class="w-36 h-36 bg-white/5 rounded-lg animate-pulse" />
-            <p class="text-xs text-white/30 text-center break-all font-mono">{{ joinUrl }}</p>
-          </div>
-          <NuxtLink
-            :to="`/join/${sunSlug}`"
-            class="btn-primary w-full text-center text-sm block"
-            target="_blank"
-          >
-            Open join page
-          </NuxtLink>
-        </div>
-      </Transition>
-    </div>
-
   </div>
 </template>
 
@@ -96,24 +60,10 @@ import type { Attendee } from '~/types'
 
 const props = defineProps<{
   sunName: string
-  sunSlug: string
   attendees: Attendee[]
 }>()
 
 const listOpen = ref(false)
-const qrOpen = ref(false)
-
-const { generateDataUrl, getJoinUrl } = useQrCode()
-const qrDataUrl = ref('')
-const joinUrl = computed(() => getJoinUrl(props.sunSlug))
-
-onMounted(async () => {
-  qrDataUrl.value = await generateDataUrl(props.sunSlug)
-})
-
-watch(() => props.sunSlug, async (slug) => {
-  qrDataUrl.value = await generateDataUrl(slug)
-})
 
 const count = computed(() => props.attendees.length)
 const sortedAttendees = computed(() =>

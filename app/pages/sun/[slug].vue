@@ -20,12 +20,11 @@
     >
       <AttendeePanel
         :sun-name="sun.name"
-        :sun-slug="sun.slug"
         :attendees="attendeesStore.attendees"
       />
     </div>
 
-    <!-- Top-left: sun name + back link -->
+    <!-- Top-left: sun name + back link + join QR -->
     <div v-if="sun" class="absolute top-4 left-4 z-10">
       <NuxtLink
         v-if="auth.user"
@@ -35,6 +34,7 @@
         ← All Suns
       </NuxtLink>
       <h1 class="text-white font-bold text-xl mt-1 sun-glow-text">{{ sun.name }}</h1>
+      <JoinQr :sun-slug="sun.slug" class="mt-3" />
     </div>
 
     <!-- Leave button (bottom-left, only when joined) -->

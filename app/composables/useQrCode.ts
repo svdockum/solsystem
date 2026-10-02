@@ -1,10 +1,10 @@
 import QRCode from 'qrcode'
 
 export function useQrCode() {
-  const generateDataUrl = async (sunSlug: string): Promise<string> => {
+  const generateDataUrl = async (sunSlug: string, width = 300): Promise<string> => {
     const url = `${window.location.origin}/join/${sunSlug}`
     return QRCode.toDataURL(url, {
-      width: 300,
+      width,
       margin: 2,
       color: {
         dark: '#000000',
